@@ -1,0 +1,215 @@
+#include <SoftwareSerial.h>
+
+SoftwareSerial BT(2, 3);   // Nano RX = D2, TX = D3
+
+// =========================
+// MOTOR PINS - L298N
+// =========================
+
+// Left motor
+#define ENA 5
+#define IN1 7
+#define IN2 8
+
+// Right motor
+#define ENB 6
+#define IN3 9
+#define IN4 10
+
+// =========================
+// VACUUM RELAY
+// =========================
+
+#define RELAY_PIN 4
+
+// Change to LOW if your relay is active LOW
+#define RELAY_ON  HIGH
+#define RELAY_OFF LOW
+
+
+void setup() {
+
+  Serial.begin(9600);
+  BT.begin(9600);
+
+  // Motor pins
+  pinMode(ENA, OUTPUT);
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+
+  pinMode(ENB, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+
+  // Relay
+  pinMode(RELAY_PIN, OUTPUT);
+
+  // Initial state
+  stopMotors();
+  digitalWrite(RELAY_PIN, RELAY_OFF);
+
+  Serial.println("================================");
+  Serial.println(" ROBOT READY");
+  Serial.println("================================");
+}
+
+
+void loop() {
+
+  if (BT.available()) {
+
+    char command = BT.read();
+
+    // Ignore newline and carriage return
+    if (command == '\n' || command == '\r') {
+      return;
+    }
+
+    Serial.print("Received: ");
+    Serial.println(command);
+
+
+    // =========================
+    // MOVEMENT COMMANDS
+    // =========================
+
+    switch (command) {
+
+      case 'F':
+        forward();
+        break;
+
+      case 'B':
+        backward();
+        break;
+
+      case 'R':
+        left();
+        break;
+
+      case 'L':
+        right();
+        break;
+
+      case 'S':
+        stopMotors();
+        break;
+
+
+      // =========================
+      // VACUUM COMMAND
+      // V1 / V0
+      // =========================
+
+      case 'V':
+
+        // Wait for the next character
+        while (!BT.available()) {
+          // wait
+        }
+
+        char vacuumCommand = BT.read();
+
+        if (vacuumCommand == '1') {
+
+          digitalWrite(RELAY_PIN, RELAY_ON);
+
+          Serial.println("VACUUM ON");
+        }
+
+        else if (vacuumCommand == '0') {
+
+          digitalWrite(RELAY_PIN, RELAY_OFF);
+
+          Serial.println("VACUUM OFF");
+        }
+
+        break;
+    }
+  }
+}
+
+
+// =================================
+// FORWARD
+// =================================
+
+void forward() {
+
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+
+  analogWrite(ENA, 255);
+  analogWrite(ENB, 255);
+}
+
+
+// =================================
+// BACKWARD
+// =================================
+
+void backward() {
+
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+
+  analogWrite(ENA, 255);
+  analogWrite(ENB, 255);
+}
+
+
+// =================================
+// LEFT
+// =================================
+
+void left() {
+
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+
+  analogWrite(ENA, 255);
+  analogWrite(ENB, 255);
+}
+
+
+// =================================
+// RIGHT
+// =================================
+
+void right() {
+
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+
+  analogWrite(ENA, 255);
+  analogWrite(ENB, 255);
+}
+
+
+// =================================
+// STOP
+// =================================
+
+void stopMotors() {
+
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
+
+  analogWrite(ENA, 0);
+  analogWrite(ENB, 0);
+}
